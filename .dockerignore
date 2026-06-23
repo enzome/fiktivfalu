@@ -1,0 +1,8 @@
+.git
+.gitignore
+*.md
+fiktivfalu.png
+db/*.sqlite
+db/users/users
+tmp/
+vendor/

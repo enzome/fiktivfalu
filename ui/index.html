@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Leaflet OpenStreetMap</title>
+	<link
+		rel="stylesheet"
+		href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+		integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+		crossorigin=""
+	>
+	<link
+		rel="stylesheet"
+		href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+	>
+	<style>
+		html,
+		body,
+		#app,
+		#map {
+			width: 100%;
+			height: 100%;
+			margin: 0;
+			padding: 0;
+		}
+
+		#app {
+			position: relative;
+			overflow: hidden;
+			font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+		}
+
+		.fab {
+			position: absolute;
+			right: 16px;
+			bottom: 16px;
+			z-index: 600;
+			background: #1f7a3f;
+			color: #fff;
+			border: none;
+			border-radius: 999px;
+			padding: 12px 18px;
+			font-size: 15px;
+			cursor: pointer;
+			box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+		}
+
+		.legend {
+			position: absolute;
+			top: 16px;
+			right: 16px;
+			z-index: 650;
+			width: 280px;
+			background: rgba(255, 255, 255, 0.96);
+			border: 1px solid rgba(0, 0, 0, 0.08);
+			border-radius: 12px;
+			box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+			backdrop-filter: blur(2px);
+		}
+
+		.legend-toggle {
+			display: none;
+			align-items: center;
+			justify-content: center;
+			width: 42px;
+			height: 42px;
+			border: none;
+			border-radius: 999px;
+			background: #ffffff;
+			color: #1f7a3f;
+			box-shadow: 0 6px 16px rgba(0, 0, 0, 0.24);
+			font-size: 20px;
+			cursor: pointer;
+		}
+
+		.legend-content {
+			padding: 12px;
+		}
+
+		.legend-title {
+			margin: 0 0 10px;
+			font-size: 14px;
+			font-weight: 700;
+			color: #1f2a36;
+		}
+
+		.legend-list {
+			list-style: none;
+			margin: 0;
+			padding: 0;
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+		}
+
+		.legend-item {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			font-size: 14px;
+			color: #2a3340;
+		}
+
+		.legend-icon {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 24px;
+			height: 24px;
+			border-radius: 999px;
+			color: #fff;
+			font-size: 13px;
+			flex-shrink: 0;
+		}
+
+		.legend-empty {
+			margin: 0;
+			font-size: 13px;
+			color: #6a7280;
+		}
+
+		.modal-backdrop {
+			position: absolute;
+			inset: 0;
+			z-index: 1000;
+			background: rgba(0, 0, 0, 0.45);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 16px;
+		}
+
+		.modal {
+			width: 100%;
+			max-width: 420px;
+			background: #fff;
+			border-radius: 10px;
+			padding: 16px;
+			box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+		}
+
+		.modal h2 {
+			margin: 0 0 12px;
+			font-size: 20px;
+		}
+
+		.field {
+			display: flex;
+			flex-direction: column;
+			gap: 4px;
+			margin-bottom: 10px;
+		}
+
+		.field input,
+		.field textarea,
+		.field select {
+			padding: 10px;
+			border: 1px solid #ccc;
+			border-radius: 8px;
+			font-size: 14px;
+		}
+
+		.actions {
+			display: flex;
+			gap: 8px;
+			justify-content: flex-end;
+			margin-top: 12px;
+		}
+
+		.btn {
+			border: none;
+			border-radius: 8px;
+			padding: 10px 14px;
+			cursor: pointer;
+		}
+
+		.btn-secondary {
+			background: #ececec;
+			color: #222;
+		}
+
+		.btn-primary {
+			background: #1f7a3f;
+			color: #fff;
+		}
+
+		.error {
+			color: #b42318;
+			font-size: 13px;
+			margin: 4px 0 0;
+		}
+
+		.category-option-icon {
+			margin-right: 6px;
+		}
+
+		.custom-pin {
+			position: relative;
+			width: 34px;
+			height: 46px;
+		}
+
+		.custom-pin-shape {
+			position: absolute;
+			left: 2px;
+			top: 0;
+			width: 30px;
+			height: 30px;
+			border-radius: 50% 50% 50% 0;
+			transform: rotate(-45deg);
+			background: var(--pin-color, #2d6cdf);
+			box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+		}
+
+		.custom-pin-icon {
+			position: absolute;
+			left: 9px;
+			top: 6px;
+			width: 16px;
+			height: 16px;
+			color: #ffffff;
+			font-size: 14px;
+			line-height: 16px;
+			text-align: center;
+		}
+
+		@media (max-width: 768px) {
+			.legend {
+				width: auto;
+				background: transparent;
+				border: none;
+				box-shadow: none;
+				backdrop-filter: none;
+			}
+
+			.legend-toggle {
+				display: inline-flex;
+			}
+
+			.legend-content {
+				position: absolute;
+				right: 0;
+				top: 48px;
+				width: min(280px, calc(100vw - 24px));
+				background: rgba(255, 255, 255, 0.97);
+				border: 1px solid rgba(0, 0, 0, 0.08);
+				border-radius: 12px;
+				box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+				max-height: 0;
+				overflow: hidden;
+				opacity: 0;
+				padding-top: 0;
+				padding-bottom: 0;
+				transition: max-height 0.2s ease, opacity 0.2s ease, padding 0.2s ease;
+			}
+
+			.legend.legend-open .legend-content {
+				max-height: 320px;
+				opacity: 1;
+				padding-top: 12px;
+				padding-bottom: 12px;
+			}
+		}
+	</style>
+</head>
+<body>
+	<div id="app">
+		<div id="map"></div>
+		<div class="legend" :class="{ 'legend-open': showLegendMobile }">
+			<button class="legend-toggle" type="button" @click="showLegendMobile = !showLegendMobile" aria-label="Kategóriák mutatása">
+				<i class="bi bi-question-lg"></i>
+			</button>
+			<div class="legend-content">
+				<h3 class="legend-title">Kategóriák</h3>
+				<ul v-if="categories.length" class="legend-list">
+					<li v-for="category in categories" :key="'legend-' + category.id" class="legend-item">
+						<span class="legend-icon" :style="{ backgroundColor: normalizeColor(category.color) }">
+							<i class="bi" :class="normalizeIconClass(category.icon)"></i>
+						</span>
+						<span>{{ category.name }}</span>
+					</li>
+				</ul>
+				<p v-else class="legend-empty">Nincsenek kategóriák.</p>
+			</div>
+		</div>
+		<button class="fab" type="button" 
+		>Bejegyzés rögzítéséséhez kattints a térképre</button>
+
+		<div v-if="showModal" class="modal-backdrop" @click.self="closeModal()">
+			<div class="modal" role="dialog" aria-modal="true" aria-label="Tapasztalat megosztása">
+                <div v-if="thankyou">
+                    <h2>Köszönjük a visszajelzést!</h2>
+                    <p>A tapasztalat beküldésre került. Amint lehetséges, meg fogjuk tekinteni és szükség esetén intézkedni fogunk.</p>
+                    <div class="actions">
+                        <button class="btn btn-primary" type="button" @click="closeModal()">Bezárás</button>
+                    </div>
+                </div>
+                <div v-else>
+                    <h2>Tapasztalat megosztása</h2>
+    
+                    <div class="field">
+                        <label for="placemark-name">Név</label>
+                        <input id="placemark-name" v-model.trim="form.name" type="text" placeholder="Szituáció megnevezése">
+                    </div>
+    
+                    <div class="field">
+                        <label for="placemark-category">Kategória</label>
+                        <select id="placemark-category" v-model.number="form.categoryId">
+                            <option :value="null" disabled>Válassz kategóriát</option>
+                            <option v-for="category in categories" :key="category.id" :value="category.id">
+                                {{ category.name }}
+                            </option>
+                        </select>
+                    </div>
+    
+                    <div class="field">
+                        <label for="placemark-description">Leírás</label>
+                        <textarea id="placemark-description" v-model.trim="form.description" rows="3" placeholder="Rövid leírás pár mondatban."></textarea>
+                    </div>
+    
+    
+    
+    
+                    <div class="field">
+                        <label for="placemark-postcode">Irányítószám</label>
+                        <input id="placemark-postcode" v-model.trim="form.postcode" type="text" placeholder="Irányítószám">
+                    </div>
+    
+                    <div class="field">
+                        <label for="placemark-email">E-mail (opcionális, nem látszik a felületen)</label>
+                        <input id="placemark-email" v-model.trim="form.email" type="email" placeholder="name@example.com">
+                    </div>
+					<p>Az e-mail cím megadásával jelezheted igényedet arra, hogy értesítést kapj a bejegyzésed állapotáról és egyéb ügyekkel kapcsolatban a Fiatalok A Magyar Vidékért Alapítványtól.</p>
+					<p>Helyszín koordinátái: {{ form.lat.toFixed(6) }}, {{ form.lng.toFixed(6) }}</p>
+
+					
+    
+                    <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
+    
+                    <div class="actions">
+                        <button class="btn btn-secondary" type="button" @click="closeModal()">Mégse</button>
+                        <button class="btn btn-primary" type="button" :disabled="isSubmitting" @click="createPlacemark()">
+                            {{ isSubmitting ? "Beküldés..." : "Bejegyzés beküldése" }}
+                        </button>
+                    </div>
+                </div>
+			</div>
+		</div>
+	</div>
+
+	<script
+		src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+		integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+		crossorigin=""
+	></script>
+	<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+	<script>
+		const app = Vue.createApp({
+			data() {
+				return {
+					map: null,
+					placemarkLayer: null,
+					categories: [],
+					showLegendMobile: false,
+					showModal: false,
+					isSubmitting: false,
+                    thankyou: false,
+					errorMessage: "",
+					form: {
+						name: "",
+						description: "",
+						lat: null,
+						lng: null,
+						categoryId: null,
+						postcode: "",
+						email: ""
+					},
+					defaultCenter: [47.1625, 19.5033]
+				};
+			},
+			methods: {
+				initMap() {
+					this.map = L.map("map").setView(this.defaultCenter, 8);
+
+					L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+						maxZoom: 19,
+						attribution: "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors"
+					}).addTo(this.map);
+
+					this.placemarkLayer = L.layerGroup().addTo(this.map);
+
+					this.map.on("click", (event) => {
+						this.openAddModal(event.latlng.lat, event.latlng.lng);
+					});
+
+					if (navigator.geolocation) {
+						navigator.geolocation.getCurrentPosition(
+							(position) => {
+								this.map.setView([position.coords.latitude, position.coords.longitude], 14);
+							},
+							(error) => {
+								console.warn("Geolocation failed:", error.message);
+							},
+							{ enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+						);
+					}
+				},
+				openAddModal(lat = null, lng = null) {
+					const center = this.map ? this.map.getCenter() : { lat: this.defaultCenter[0], lng: this.defaultCenter[1] };
+					const defaultCategory = this.categories.length > 0 ? this.categories[0].id : null;
+
+					this.form = {
+						name: "",
+						description: "",
+						lat: lat ?? center.lat,
+						lng: lng ?? center.lng,
+						categoryId: defaultCategory,
+						postcode: "",
+						email: ""
+					};
+
+					this.errorMessage = "";
+					this.showModal = true;
+				},
+				closeModal() {
+					this.showModal = false;
+					this.errorMessage = "";
+				},
+				async loadPlacemarks() {
+					const response = await fetch("/api/placemarks");
+					const payload = await response.json();
+
+					if (!response.ok || !payload.ok) {
+						throw new Error(payload.error || "Could not load placemarks");
+					}
+
+					this.renderPlacemarks(payload.data || []);
+				},
+				async loadCategories() {
+					const response = await fetch("/api/categories");
+					const payload = await response.json();
+
+					if (!response.ok || !payload.ok) {
+						throw new Error(payload.error || "Could not load categories");
+					}
+
+					this.categories = (payload.data || []).map((category) => ({
+						...category,
+						icon: this.normalizeIconClass(category.icon)
+					}));
+				},
+				renderPlacemarks(placemarks) {
+					this.placemarkLayer.clearLayers();
+
+					placemarks.forEach((placemark) => {
+						const iconClass = this.normalizeIconClass(placemark.categoryIcon);
+						const pinColor = this.normalizeColor(placemark.categoryColor);
+						const marker = L.marker([placemark.lat, placemark.lng], {
+							icon: L.divIcon({
+								className: "",
+								iconSize: [34, 46],
+								iconAnchor: [17, 42],
+								popupAnchor: [0, -36],
+								html: `<div class="custom-pin" style="--pin-color:${pinColor}">` +
+									`<span class="custom-pin-shape"></span>` +
+									`<i class="bi ${iconClass} custom-pin-icon"></i>` +
+									`</div>`
+							})
+						});
+						const categoryLabel = placemark.categoryName
+							? "<i class=\"bi " + iconClass + "\"></i> " + this.escapeHtml(placemark.categoryName)
+							: "Uncategorized";
+						const categoryLine = placemark.categoryColor
+							? "<span style=\"display:inline-block;width:10px;height:10px;border-radius:999px;background:" + pinColor + ";margin-right:6px;\"></span>" + categoryLabel
+							: categoryLabel;
+						const details = [
+							"<strong>" + this.escapeHtml(placemark.name) + "</strong>",
+							categoryLine,
+							placemark.postcode ? "Irányítószám: " + this.escapeHtml(placemark.postcode) : "",
+							placemark.description ? this.escapeHtml(placemark.description) : ""
+						].filter(Boolean).join("<br>");
+
+						marker.bindPopup(details);
+						marker.addTo(this.placemarkLayer);
+					});
+				},
+				async createPlacemark() {
+					this.errorMessage = "";
+
+					if (!this.form.name || !Number.isFinite(Number(this.form.lat)) || !Number.isFinite(Number(this.form.lng)) || !Number.isFinite(Number(this.form.categoryId)) || !this.form.postcode) {
+						this.errorMessage = "Kérjük, adja meg a nevet, koordinátákat, kategóriát és irányítószámot.";
+						return;
+					}
+
+					if (this.form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.form.email)) {
+						this.errorMessage = "Kérjük, adjon meg egy érvényes e-mail címet, vagy hagyja üresen.";
+						return;
+					}
+
+					this.isSubmitting = true;
+
+					try {
+						const response = await fetch("/api/placemarks", {
+							method: "POST",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify({
+								name: this.form.name,
+								description: this.form.description,
+								lat: Number(this.form.lat),
+								lng: Number(this.form.lng),
+								categoryId: Number(this.form.categoryId),
+								postcode: this.form.postcode,
+								email: this.form.email || null
+							})
+						});
+
+						const payload = await response.json();
+
+						if (!response.ok || !payload.ok) {
+							throw new Error(payload.error || "Nem sikerült elmenteni a helyszínt");
+						}
+
+						// await this.loadPlacemarks();
+                        this.thankyou = true;
+					} catch (error) {
+						this.errorMessage = error.message || "Nem sikerült elmenteni a helyszínt";
+					} finally {
+						this.isSubmitting = false;
+					}
+				},
+				normalizeIconClass(value) {
+					const raw = String(value || "").trim();
+					if (/^bi-[a-z0-9-]+$/i.test(raw)) {
+						return raw.toLowerCase();
+					}
+
+					const withPrefix = raw.replace(/^bi\s+/i, "").trim();
+					if (/^bi-[a-z0-9-]+$/i.test(withPrefix)) {
+						return withPrefix.toLowerCase();
+					}
+
+					return "bi-geo-alt-fill";
+				},
+				normalizeColor(value) {
+					const raw = String(value || "").trim();
+					if (/^#[A-Fa-f0-9]{6}$/.test(raw)) {
+						return raw;
+					}
+					return "#2d6cdf";
+				},
+				escapeHtml(value) {
+					return String(value)
+						.replace(/&/g, "&amp;")
+						.replace(/</g, "&lt;")
+						.replace(/>/g, "&gt;")
+						.replace(/\"/g, "&quot;")
+						.replace(/'/g, "&#039;");
+				}
+			},
+			async mounted() {
+				this.initMap();
+
+				try {
+					await this.loadCategories();
+					await this.loadPlacemarks();
+				} catch (error) {
+					console.warn(error.message);
+				}
+			}
+		});
+
+		app.mount("#app");
+	</script>
+</body>
+</html>

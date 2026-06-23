@@ -1,0 +1,854 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin - Placemarks</title>
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+  >
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f7f6;
+      --panel: #ffffff;
+      --text: #1f2933;
+      --muted: #5b6871;
+      --border: #d8e1e6;
+      --accent: #156f46;
+      --danger: #b42318;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.2;
+    }
+
+    .sub {
+      color: var(--muted);
+      margin: 6px 0 0;
+      font-size: 14px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 14px;
+      padding: 10px 14px;
+      cursor: pointer;
+    }
+
+    .btn-secondary {
+      background: #68727d;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .panel-header {
+      padding: 14px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      background: #f8faf9;
+    }
+
+    .panel-body {
+      padding: 14px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 140px 1.2fr auto auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .field label {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .field input {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      padding: 10px;
+    }
+
+    .field textarea,
+    .field select {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      padding: 10px;
+      font-family: inherit;
+    }
+
+    .category-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 10px;
+      background: #fff;
+    }
+
+    .swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      display: inline-block;
+    }
+
+    .icon-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 10px;
+      background: #fff;
+    }
+
+    .icon-chip i {
+      font-size: 15px;
+      color: #2a3a45;
+    }
+
+    .error {
+      margin: 0 0 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #fef3f2;
+      color: var(--danger);
+      border: 1px solid #fecdca;
+      font-size: 14px;
+    }
+
+    .table-wrap {
+      overflow: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f8faf9;
+      color: #33414b;
+      font-weight: 600;
+    }
+
+    td small {
+      color: var(--muted);
+    }
+
+    .empty {
+      padding: 24px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .actions-cell {
+      white-space: nowrap;
+    }
+
+    .editor-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .editor-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+
+    .icon-search-dropdown {
+      position: relative;
+    }
+
+    .icon-search-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .icon-search-input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      padding: 10px 36px 10px 10px;
+      font-family: inherit;
+    }
+
+    .icon-preview-badge {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      color: var(--text);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .icon-dropdown-list {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      max-height: 280px;
+      overflow-y: auto;
+      z-index: 100;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .icon-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background-color 0.15s;
+    }
+
+    .icon-dropdown-item:hover {
+      background-color: #f8faf9;
+    }
+
+    .icon-dropdown-item.active {
+      background-color: #e8f3ea;
+      color: var(--accent);
+    }
+
+    .icon-dropdown-item i {
+      font-size: 18px;
+      min-width: 24px;
+    }
+
+    .icon-dropdown-text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .icon-label {
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .icon-value {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .icon-dropdown-empty {
+      padding: 16px 12px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .search-input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      padding: 10px;
+      font-family: inherit;
+    }
+
+    @media (max-width: 720px) {
+      h1 {
+        font-size: 20px;
+      }
+
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .editor-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="wrap">
+    <div class="header">
+      <div>
+        <h1>Térkép Admin</h1>
+      </div>
+      <div class="controls">
+        <button class="btn" type="button" @click="load" :disabled="loading">
+          {{ loading ? "Betöltés..." : "Frissítés" }}
+        </button>
+      </div>
+    </div>
+
+    <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
+
+    <div class="panel">
+      <div class="panel-header">Kategóriák</div>
+      <div class="panel-body">
+        <div class="form-grid">
+          <div class="field">
+            <label for="category-name">Név</label>
+            <input id="category-name" v-model.trim="categoryForm.name" type="text" placeholder="Kategória neve">
+          </div>
+          <div class="field">
+            <label for="category-color">Szín</label>
+            <input id="category-color" v-model="categoryForm.color" type="color">
+          </div>
+          <div class="field">
+            <label for="category-icon">Ikon</label>
+            <div class="icon-search-dropdown">
+              <div class="icon-search-input-wrapper">
+                <input
+                  id="category-icon"
+                  v-model="iconSearchQuery"
+                  type="text"
+                  placeholder="Ikon keresése..."
+                  @focus="showIconDropdown = true"
+                  @blur="scheduleHideIconDropdown"
+                  class="icon-search-input"
+                >
+                <div v-if="categoryForm.icon" class="icon-preview-badge">
+                  <i class="bi" :class="normalizeIconClass(categoryForm.icon)"></i>
+                </div>
+              </div>
+              <div v-if="showIconDropdown" class="icon-dropdown-list">
+                <div
+                  v-for="iconOption in filteredIconOptions"
+                  :key="iconOption.value"
+                  class="icon-dropdown-item"
+                  :class="{ active: categoryForm.icon === iconOption.value }"
+                  @click="selectIcon(iconOption.value)"
+                >
+                  <i class="bi" :class="normalizeIconClass(iconOption.value)"></i>
+                  <div class="icon-dropdown-text">
+                    <div class="icon-label">{{ iconOption.label }}</div>
+                    <div class="icon-value">{{ iconOption.value }}</div>
+                  </div>
+                </div>
+                <div v-if="filteredIconOptions.length === 0" class="icon-dropdown-empty">
+                  Nincs találat
+                </div>
+              </div>
+            </div>
+          </div>
+          <button class="btn" type="button" @click="createCategory" :disabled="categorySaving">
+            {{ categorySaving ? "Mentés..." : (editingCategoryId ? "Kategória mentése" : "Kategória hozzáadása") }}
+          </button>
+          <button v-if="editingCategoryId" class="btn btn-secondary" type="button" @click="cancelCategoryEdit" :disabled="categorySaving">
+            Mégse
+          </button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Név</th>
+              <th>Ikon</th>
+              <th>Szín</th>
+              <th>Létrehozva</th>
+              <th>Műveletek</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="category in categories" :key="category.id">
+              <td>{{ category.id }}</td>
+              <td>{{ category.name }}</td>
+              <td>
+                <span class="icon-chip">
+                  <i class="bi" :class="normalizeIconClass(category.icon)"></i>
+                  {{ normalizeIconClass(category.icon) }}
+                </span>
+              </td>
+              <td>
+                <span class="category-badge">
+                  <span class="swatch" :style="{ backgroundColor: category.color }"></span>
+                  {{ category.color }}
+                </span>
+              </td>
+              <td>{{ formatDate(category.createdAt) }}</td>
+              <td class="actions-cell">
+                <button class="btn" type="button" @click="startEditCategory(category)">Szerkesztés</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">Helyek</div>
+      <div v-if="editingPlacemarkId" class="panel-body">
+        <div class="editor-grid">
+          <div class="field">
+            <label for="edit-placemark-name">Név</label>
+            <input id="edit-placemark-name" v-model.trim="placemarkEditForm.name" type="text">
+          </div>
+          <div class="field">
+            <label for="edit-placemark-category">Kategória</label>
+            <select id="edit-placemark-category" v-model.number="placemarkEditForm.categoryId">
+              <option v-for="category in categories" :key="category.id" :value="category.id">
+                {{ category.name }}
+              </option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="edit-placemark-postcode">Irányítószám</label>
+            <input id="edit-placemark-postcode" v-model.trim="placemarkEditForm.postcode" type="text">
+          </div>
+          <div class="field">
+            <label for="edit-placemark-email">E-mail</label>
+            <input id="edit-placemark-email" v-model.trim="placemarkEditForm.email" type="email">
+          </div>
+          <div class="field">
+            <label for="edit-placemark-lat">Szélesség</label>
+            <input id="edit-placemark-lat" v-model.number="placemarkEditForm.lat" type="number" step="any">
+          </div>
+          <div class="field">
+            <label for="edit-placemark-lng">Hosszúság</label>
+            <input id="edit-placemark-lng" v-model.number="placemarkEditForm.lng" type="number" step="any">
+          </div>
+          <div class="field" style="grid-column: 1 / -1;">
+            <label for="edit-placemark-description">Leírás</label>
+            <textarea id="edit-placemark-description" v-model.trim="placemarkEditForm.description" rows="3"></textarea>
+          </div>
+          <div class="field">
+            <label>
+              <input v-model="placemarkEditForm.visible" type="checkbox"> Nyilvánosan látható
+            </label>
+          </div>
+        </div>
+        <div class="editor-actions">
+          <button class="btn" type="button" @click="savePlacemarkEdit" :disabled="placemarkSaving">
+            {{ placemarkSaving ? "Mentés..." : "Hely mentése" }}
+          </button>
+          <button class="btn btn-secondary" type="button" @click="cancelPlacemarkEdit" :disabled="placemarkSaving">Mégse</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="field">
+          <label for="placemark-search">Helyek keresése</label>
+          <input
+            id="placemark-search"
+            v-model="placemarkSearchQuery"
+            type="text"
+            placeholder="Keresés név, irányítószám, e-mail vagy leírás alapján..."
+            class="search-input"
+          >
+        </div>
+      </div>
+      <div v-if="!loading && placemarks.length === 0" class="empty">
+        Még nincs hely.
+      </div>
+      <div v-else-if="filteredPlacemarks.length === 0" class="empty">
+        Nincs a keresésnek megfelelő hely.
+      </div>
+      <div v-else class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Név</th>
+              <th>Kategória</th>
+              <th>Irányítószám</th>
+              <th>E-mail</th>
+              <th>Leírás</th>
+              <th>Koordináták</th>
+              <th>Nyilvános</th>
+              <th>Létrehozva</th>
+              <th>Műveletek</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="placemark in filteredPlacemarks" :key="placemark.id">
+              <td>{{ placemark.id }}</td>
+              <td>{{ placemark.name }}</td>
+              <td>
+                <span v-if="placemark.categoryName" class="category-badge">
+                  <span class="swatch" :style="{ backgroundColor: placemark.categoryColor || '#999999' }"></span>
+                  <i class="bi" :class="normalizeIconClass(placemark.categoryIcon)"></i>
+                  {{ placemark.categoryName }}
+                </span>
+                <span v-else>-</span>
+              </td>
+              <td>{{ placemark.postcode || "-" }}</td>
+              <td>{{ placemark.email || "-" }}</td>
+              <td>{{ placemark.description || "-" }}</td>
+              <td>
+                <div>{{ formatCoord(placemark.lat) }}, {{ formatCoord(placemark.lng) }}</div>
+              </td>
+              <td>{{ placemark.visible ? "Igen" : "Nem" }}</td>
+              <td>
+                <div>{{ formatDate(placemark.createdAt) }}</div>
+                <small>{{ placemark.createdAt }}</small>
+              </td>
+              <td class="actions-cell">
+                <button class="btn" type="button" @click="startEditPlacemark(placemark)">Szerkesztés</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script type="module">
+    import { iconOptions } from './icon-options.js';
+    
+    Vue.createApp({
+      data() {
+        return {
+          loading: false,
+          categorySaving: false,
+          placemarkSaving: false,
+          editingCategoryId: null,
+          editingPlacemarkId: null,
+          errorMessage: "",
+          placemarks: [],
+          categories: [],
+          placemarkSearchQuery: "",
+          iconSearchQuery: "",
+          showIconDropdown: false,
+          iconSearchTimeout: null,
+          iconOptions: iconOptions,
+          categoryForm: {
+            name: "",
+            color: "#156f46",
+            icon: "bi-geo-alt-fill"
+          },
+          placemarkEditForm: {
+            name: "",
+            categoryId: null,
+            postcode: "",
+            email: "",
+            lat: null,
+            lng: null,
+            description: "",
+            visible: false
+          }
+        };
+      },
+      computed: {
+        filteredIconOptions() {
+          const query = this.iconSearchQuery.toLowerCase().trim();
+          if (!query) {
+            return this.iconOptions;
+          }
+          return this.iconOptions.filter(option => 
+            option.value.toLowerCase().includes(query) || 
+            option.label.toLowerCase().includes(query)
+          );
+        },
+        filteredPlacemarks() {
+          const query = this.placemarkSearchQuery.toLowerCase().trim();
+          if (!query) {
+            return this.placemarks;
+          }
+          return this.placemarks.filter(placemark =>
+            placemark.name.toLowerCase().includes(query) ||
+            (placemark.postcode && String(placemark.postcode).includes(query)) ||
+            (placemark.email && placemark.email.toLowerCase().includes(query)) ||
+            (placemark.description && placemark.description.toLowerCase().includes(query))
+          );
+        }
+      },
+      methods: {
+        selectIcon(iconValue) {
+          this.categoryForm.icon = iconValue;
+          this.showIconDropdown = false;
+          this.iconSearchQuery = "";
+        },
+        scheduleHideIconDropdown() {
+          this.iconSearchTimeout = setTimeout(() => {
+            this.showIconDropdown = false;
+          }, 200);
+        },
+        async load() {
+          this.loading = true;
+          this.errorMessage = "";
+
+          try {
+            const [placemarkResponse, categoryResponse] = await Promise.all([
+              fetch("/api/admin/placemarks"),
+              fetch("/api/admin/categories")
+            ]);
+
+            const payload = await placemarkResponse.json();
+            const categoryPayload = await categoryResponse.json();
+
+            if (!placemarkResponse.ok || !payload.ok) {
+              throw new Error(payload.error || "Could not load placemarks");
+            }
+
+            if (!categoryResponse.ok || !categoryPayload.ok) {
+              throw new Error(categoryPayload.error || "Could not load categories");
+            }
+
+            this.placemarks = payload.data || [];
+            this.categories = categoryPayload.data || [];
+          } catch (error) {
+            this.errorMessage = error.message || "Could not load placemarks";
+          } finally {
+            this.loading = false;
+          }
+        },
+        async createCategory() {
+          this.errorMessage = "";
+
+          if (!this.categoryForm.name || !this.categoryForm.color || !this.categoryForm.icon) {
+            this.errorMessage = "Please provide category name, color and icon.";
+            return;
+          }
+
+          this.categorySaving = true;
+
+          try {
+            const endpoint = this.editingCategoryId
+              ? "/api/admin/categories/" + this.editingCategoryId
+              : "/api/admin/categories";
+            const method = this.editingCategoryId ? "PUT" : "POST";
+
+            const response = await fetch(endpoint, {
+              method,
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                name: this.categoryForm.name,
+                color: this.categoryForm.color,
+                icon: this.categoryForm.icon
+              })
+            });
+
+            const payload = await response.json();
+            if (!response.ok || !payload.ok) {
+              throw new Error(payload.error || "Could not create category");
+            }
+
+            this.categoryForm.name = "";
+            this.categoryForm.icon = "bi-geo-alt-fill";
+            this.editingCategoryId = null;
+            await this.load();
+          } catch (error) {
+            this.errorMessage = error.message || "Could not create category";
+          } finally {
+            this.categorySaving = false;
+          }
+        },
+        startEditCategory(category) {
+          this.errorMessage = "";
+          this.editingCategoryId = category.id;
+          this.categoryForm = {
+            name: category.name,
+            color: category.color,
+            icon: category.icon
+          };
+        },
+        cancelCategoryEdit() {
+          this.editingCategoryId = null;
+          this.categoryForm = {
+            name: "",
+            color: "#156f46",
+            icon: "bi-geo-alt-fill"
+          };
+          this.showIconDropdown = false;
+          this.iconSearchQuery = "";
+        },
+        startEditPlacemark(placemark) {
+          this.errorMessage = "";
+          this.editingPlacemarkId = placemark.id;
+          this.placemarkEditForm = {
+            name: placemark.name || "",
+            categoryId: Number(placemark.categoryId),
+            postcode: String(placemark.postcode || ""),
+            email: placemark.email || "",
+            lat: Number(placemark.lat),
+            lng: Number(placemark.lng),
+            description: placemark.description || "",
+            visible: Boolean(Number(placemark.visible))
+          };
+        },
+        cancelPlacemarkEdit() {
+          this.editingPlacemarkId = null;
+          this.placemarkEditForm = {
+            name: "",
+            categoryId: null,
+            postcode: "",
+            email: "",
+            lat: null,
+            lng: null,
+            description: "",
+            visible: false
+          };
+        },
+        async savePlacemarkEdit() {
+          this.errorMessage = "";
+
+          if (!this.editingPlacemarkId) {
+            return;
+          }
+
+          if (!this.placemarkEditForm.name || !Number.isFinite(Number(this.placemarkEditForm.lat)) || !Number.isFinite(Number(this.placemarkEditForm.lng)) || !Number.isFinite(Number(this.placemarkEditForm.categoryId)) || !this.placemarkEditForm.postcode) {
+            this.errorMessage = "Please provide name, category, postcode and coordinates.";
+            return;
+          }
+
+          if (this.placemarkEditForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.placemarkEditForm.email)) {
+            this.errorMessage = "Please provide a valid e-mail address or leave it empty.";
+            return;
+          }
+
+          this.placemarkSaving = true;
+          try {
+            const response = await fetch("/api/admin/placemarks/" + this.editingPlacemarkId, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                name: this.placemarkEditForm.name,
+                categoryId: Number(this.placemarkEditForm.categoryId),
+                postcode: this.placemarkEditForm.postcode,
+                email: this.placemarkEditForm.email || null,
+                lat: Number(this.placemarkEditForm.lat),
+                lng: Number(this.placemarkEditForm.lng),
+                description: this.placemarkEditForm.description,
+                visible: this.placemarkEditForm.visible
+              })
+            });
+
+            const payload = await response.json();
+            if (!response.ok || !payload.ok) {
+              throw new Error(payload.error || "Could not update placemark");
+            }
+
+            this.cancelPlacemarkEdit();
+            await this.load();
+          } catch (error) {
+            this.errorMessage = error.message || "Could not update placemark";
+          } finally {
+            this.placemarkSaving = false;
+          }
+        },
+        normalizeIconClass(value) {
+          const raw = String(value || "").trim();
+          if (/^bi-[a-z0-9-]+$/i.test(raw)) {
+            return raw.toLowerCase();
+          }
+
+          const withPrefix = raw.replace(/^bi\s+/i, "").trim();
+          if (/^bi-[a-z0-9-]+$/i.test(withPrefix)) {
+            return withPrefix.toLowerCase();
+          }
+
+          return "bi-geo-alt-fill";
+        },
+        formatDate(value) {
+          const date = new Date(value);
+          if (Number.isNaN(date.getTime())) {
+            return "-";
+          }
+          return date.toLocaleString();
+        },
+        formatCoord(value) {
+          const num = Number(value);
+          if (!Number.isFinite(num)) {
+            return "-";
+          }
+          return num.toFixed(6);
+        }
+      },
+      mounted() {
+        this.load();
+      }
+    }).mount("#app");
+  </script>
+</body>
+</html>
